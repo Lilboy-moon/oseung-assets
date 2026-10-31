@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>미니 캘린더</title>
+<script src="theme.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+  .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .month { font-size: 16px; font-weight: 800; }
+  .nav { display: flex; gap: 4px; }
+  .nav button { border: none; background: var(--line); color: var(--text); width: 22px; height: 22px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { font-size: 11px; color: var(--sub); font-weight: 600; padding-bottom: 2px; }
+  td { text-align: center; font-size: 12px; height: 22px; font-variant-numeric: tabular-nums; }
+  td span { display: inline-block; width: 22px; height: 22px; line-height: 22px; border-radius: 50%; }
+  .sun { color: #e5484d; } .sat { color: var(--accent); }
+  .other { opacity: .3; }
+  .today span { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="month grad" id="m"></div>
+    <div class="nav"><button id="p">◀</button><button id="t">●</button><button id="n">▶</button></div>
+  </div>
+  <table><thead><tr><th class="sun">일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th class="sat">토</th></tr></thead><tbody id="b"></tbody></table>
+</div>
+<script>
+  function kst() { var n = new Date(); return new Date(n.getTime() + (n.getTimezoneOffset() + 540) * 60000); }
+  var now = kst(), y = now.getFullYear(), m = now.getMonth();
+  function render() {
+    var today = kst();
+    document.getElementById('m').textContent = y + '년 ' + (m + 1) + '월';
+    var first = new Date(y, m, 1).getDay(), last = new Date(y, m + 1, 0).getDate(), prevLast = new Date(y, m, 0).getDate();
+    var html = '', day = 1, next = 1;
+    for (var r = 0; r < 6; r++) {
+      html += '<tr>';
+      for (var c = 0; c < 7; c++) {
+        var i = r * 7 + c, cls = c === 0 ? 'sun' : c === 6 ? 'sat' : '', txt;
+        if (i < first) { txt = prevLast - first + i + 1; cls += ' other'; }
+        else if (day > last) { txt = next++; cls += ' other'; }
+        else {
+          txt = day;
+          if (y === today.getFullYear() && m === today.getMonth() && day === today.getDate()) cls += ' today';
+          day++;
+        }
+        html += '<td class="' + cls + '"><span>' + txt + '</span></td>';
+      }
+      html += '</tr>';
+      if (day > last && r >= 4) break;
+    }
+    document.getElementById('b').innerHTML = html;
+  }
+  document.getElementById('p').onclick = function () { m--; if (m < 0) { m = 11; y--; } render(); };
+  document.getElementById('n').onclick = function () { m++; if (m > 11) { m = 0; y++; } render(); };
+  document.getElementById('t').onclick = function () { var d = kst(); y = d.getFullYear(); m = d.getMonth(); render(); };
+  render(); setInterval(render, 60 * 1000);
+</script>
+</body>
+</html>

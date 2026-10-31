@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오승전자 시계</title>
+<script src="theme.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+  .time { font-size: clamp(34px, 13vw, 64px); font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .sec { font-size: .45em; font-weight: 700; margin-left: 4px; opacity: .8; }
+  .date { margin-top: 6px; font-size: 15px; font-weight: 600; }
+  .greet { margin-top: 4px; font-size: 12px; color: var(--sub); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="label">⚡ OSEUNG ELECTRONICS</div>
+  <div class="time"><span class="grad" id="hm">--:--</span><span class="sec grad" id="s">--</span></div>
+  <div class="date" id="date"></div>
+  <div class="greet" id="greet"></div>
+</div>
+<script>
+  var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+  function kst() {
+    var now = new Date();
+    return new Date(now.getTime() + (now.getTimezoneOffset() + 540) * 60000);
+  }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function greet(h) {
+    if (h < 6) return '늦은 시간이에요. 오늘도 수고 많았어요 🌙';
+    if (h < 12) return '좋은 아침입니다, 승택님 ☀️';
+    if (h < 18) return '오늘도 힘내세요, 승택님 💪';
+    return '오늘 하루 마무리 잘 하세요 🌆';
+  }
+  function tick() {
+    var d = kst();
+    document.getElementById('hm').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    document.getElementById('s').textContent = pad(d.getSeconds());
+    document.getElementById('date').textContent =
+      d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + DAYS[d.getDay()] + ')';
+    document.getElementById('greet').textContent = greet(d.getHours());
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

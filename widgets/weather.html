@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오창 날씨</title>
+<script src="theme.js"></script>
+<link rel="stylesheet" href="common.css">
+<style>
+  .row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+  .icon { font-size: 38px; line-height: 1; }
+  .temp { font-size: 34px; font-weight: 800; line-height: 1; }
+  .desc { font-size: 14px; font-weight: 600; }
+  .meta { font-size: 12px; color: var(--sub); margin-top: 2px; }
+  .days { display: flex; gap: 6px; margin-top: 8px; }
+  .day { flex: 1; text-align: center; padding: 4px 0; border-radius: 10px; background: var(--line); font-size: 12px; }
+  .day b { display: block; font-size: 11px; color: var(--sub); font-weight: 600; }
+  .day .i { font-size: 18px; margin: 2px 0; }
+  .err { font-size: 13px; color: var(--sub); }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="label" id="place">📍 청주 오창</div>
+  <div class="err" id="msg">날씨 불러오는 중…</div>
+</div>
+<script>
+  // ?lat=..&lon=..&name=.. 로 위치 변경 가능 (기본: 충북 청주 오창)
+  var q = new URLSearchParams(location.search);
+  var LAT = q.get('lat') || '36.7167', LON = q.get('lon') || '127.4333', NAME = q.get('name') || '청주 오창';
+  var WMO = {
+    0: ['☀️', '맑음'], 1: ['🌤️', '대체로 맑음'], 2: ['⛅', '구름 조금'], 3: ['☁️', '흐림'],
+    45: ['🌫️', '안개'], 48: ['🌫️', '안개'],
+    51: ['🌦️', '약한 이슬비'], 53: ['🌦️', '이슬비'], 55: ['🌧️', '강한 이슬비'],
+    61: ['🌧️', '약한 비'], 63: ['🌧️', '비'], 65: ['🌧️', '강한 비'],
+    66: ['🌧️', '어는 비'], 67: ['🌧️', '어는 비'],
+    71: ['🌨️', '약한 눈'], 73: ['🌨️', '눈'], 75: ['❄️', '많은 눈'], 77: ['🌨️', '싸락눈'],
+    80: ['🌦️', '소나기'], 81: ['🌧️', '소나기'], 82: ['⛈️', '강한 소나기'],
+    85: ['🌨️', '눈 소나기'], 86: ['❄️', '강한 눈 소나기'],
+    95: ['⛈️', '뇌우'], 96: ['⛈️', '우박 뇌우'], 99: ['⛈️', '우박 뇌우']
+  };
+  var DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+  function w(c) { return WMO[c] || ['🌡️', '-']; }
+
+  function load() {
+    var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + LAT + '&longitude=' + LON +
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+      '&timezone=Asia%2FSeoul&forecast_days=4&wind_speed_unit=ms';
+    fetch(url).then(function (r) { return r.json(); }).then(function (d) {
+      var c = d.current, dl = d.daily, cw = w(c.weather_code);
+      var html = '<div class="label">📍 ' + NAME + '</div>' +
+        '<div class="row"><div class="icon">' + cw[0] + '</div><div>' +
+        '<div class="temp grad">' + Math.round(c.temperature_2m) + '°</div>' +
+        '<div class="desc">' + cw[1] + '</div></div></div>' +
+        '<div class="meta">체감 ' + Math.round(c.apparent_temperature) + '° · 습도 ' + c.relative_humidity_2m +
+        '% · 바람 ' + c.wind_speed_10m.toFixed(1) + 'm/s · 최고 ' + Math.round(dl.temperature_2m_max[0]) +
+        '° / 최저 ' + Math.round(dl.temperature_2m_min[0]) + '°</div><div class="days">';
+      for (var i = 1; i < dl.time.length; i++) {
+        var dt = new Date(dl.time[i] + 'T00:00:00');
+        html += '<div class="day"><b>' + (i === 1 ? '내일' : DAYS[dt.getDay()]) + '</b><div class="i">' +
+          w(dl.weather_code[i])[0] + '</div>' + Math.round(dl.temperature_2m_max[i]) + '° / ' +
+          Math.round(dl.temperature_2m_min[i]) + '°<br><span style="color:var(--sub)">☔' +
+          (dl.precipitation_probability_max[i] ?? 0) + '%</span></div>';
+      }
+      document.getElementById('card').innerHTML = html + '</div>';
+    }).catch(function () {
+      document.getElementById('msg').textContent = '날씨 정보를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.';
+    });
+  }
+  load(); setInterval(load, 30 * 60 * 1000);
+</script>
+</body>
+</html>
